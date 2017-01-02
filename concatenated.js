@@ -46,6 +46,7 @@ function normalize(str){
 var COUNT_ANY = 0;
 var COUNT_SINGULAR = 1;
 var COUNT_PLURAL = 2;
+var COUNT_I = 3; // special pseudo-count for the pronoun 'I' (needs 'am'/'was' for copula)
 
 var INITIAL_ANY = 0;
 var INITIAL_CONSONANT = 1;
@@ -111,8 +112,14 @@ function classifyCopula(term){
   var text = normalize(term.text);
   if (hasPrefix(text, 'are') || hasPrefix(text, 'were')){
     term.requiredCount = COUNT_PLURAL;
-  } else if (hasPrefix(text, 'is') || hasPrefix(text, 'was')){
+  } else if (hasPrefix(text, 'is')){
     term.requiredCount = COUNT_SINGULAR;
+  } else if (hasPrefix(text, 'was')){
+    term.requiredCount = COUNT_SINGULAR;
+    term.compatibleWithI = true;
+  } else if (hasPrefix(text, 'am')){
+    term.requiredCount = COUNT_I;
+    term.compatibleWithI = true;
   }
 }
 
@@ -161,12 +168,15 @@ function classifyPossessive(term){
 
 function classifyPronoun(term){
   var text = normalize(term.text);
-  if (contains(['he','she'], text)){ // singular subject
+  if (text === 'i'){ // 'I' is special
+    term.cat = {SubjectPronoun: true};
+    term.requiredCount = COUNT_I;
+  }
+  else if (contains(['he','she'], text)){ // singular subject
     term.cat = {SubjectPronoun: true};
     term.requiredCount = COUNT_SINGULAR;
   }
-  else if (contains(['i','we','they'], text)){ // plural subject
-    // TODO: 'I' isn't exactly plural, but it's close enough for now
+  else if (contains(['we','they'], text)){ // plural subject
     term.cat = {SubjectPronoun: true};
     term.requiredCount = COUNT_PLURAL;
   }
@@ -417,6 +427,9 @@ function termify(text){
 function hasRequiredCount(term, requiredCount){
   if (requiredCount === COUNT_ANY || !term.requiredCount){
     return true;
+  } else if (requiredCount === COUNT_I) {
+    // 'I' takes 'am'/'was' for copula, plural forms otherwise
+    return term.cat.Copula ? term.compatibleWithI : requiredCount === COUNT_PLURAL;
   } else {
     return requiredCount === term.requiredCount;
   }
