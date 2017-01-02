@@ -59,6 +59,10 @@ var subjectPatterns = [
   ['Determiner', 'NormalNoun'],
   // the adjective subject...
   ['Determiner', 'Adjective', 'NormalNoun'],
+  // subjects...
+  ['PluralNoun'],
+  // adjective subjects...
+  ['Adjective', 'PluralNoun'],
   // Max...
   ['Person'],
   // I...
@@ -90,6 +94,10 @@ var verbObjectPatterns = [
   {verb: ['NormalVerb'], object: ['Article', 'NormalNoun']},
   // ...verbs the adjective object
   {verb: ['NormalVerb'], object: ['Article', 'Adjective', 'NormalNoun']},
+  // ...verbs objects
+  {verb: ['NormalVerb'], object: ['PluralNoun']},
+  // ...verbs adjective objects
+  {verb: ['NormalVerb'], object: ['Adjective', 'PluralNoun']},
   // ...verbs Max
   {verb: ['NormalVerb'], object: ['Person']},
   // ...verbs me
@@ -401,6 +409,9 @@ function termify(text){
     else if (term.pos.Noun){
       term.cat = {NormalNoun: true};
       term.requiredCount = term.pos.Plural ? COUNT_PLURAL : COUNT_SINGULAR;
+      if (term.pos.Plural){
+        term.cat.PluralNoun = true;
+      }
     }
     else if (term.pos.Preposition){
       term.cat = {Preposition: true};
