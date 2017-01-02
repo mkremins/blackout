@@ -307,128 +307,158 @@ var blacklist = [
   'which'
 ];
 
+function decluster(terms){
+  var newTerms = [];
+  for (var i = 0; i < terms.length; i++){
+    var term = terms[i];
+    if (term.pos.Pronoun){
+      var split = term.text.split(/\s/);
+      if (split.length > 1){
+        for (var j = 0; j < split.length - 1; j++){
+          // TODO these are basically ignored, even though they might be useful
+          // (seems like they're usually nouns, occasionally verbs)
+          newTerms.push({text: split[j], pos: {}});
+        }
+        // assume the last part of the split is always the actual pronoun
+        newTerms.push({text: split[split.length - 1], pos: {Pronoun: true}});
+      }
+    }
+    // TODO deal with nouns that have a determiner attached to the front
+    else {
+      newTerms.push(term);
+    }
+  }
+  return newTerms;
+}
+
+function classify(term){
+  var text = normalize(term.text);
+  // GARBAGE
+  // we don't care about these
+  if (isEmptyOrWhitespace(text)){
+    term.cat = {Whitespace: true};
+  }
+  else if (contains(blacklist, text)){
+    term.cat = {Blacklisted: true};
+  }
+  // CONTRACTIONS
+  // handle these early so we don't misclassify them as something else by mistake
+  else if (term.text.indexOf("'") !== -1 || term.text.indexOf('’') !== -1){
+    term.cat = {Contraction: true};
+  }
+  // SPECIFIC WORDS
+  // these are exceptions to the normal rules, and have to be handled manually
+  else if (text === 'are'){
+    term.cat = {Copula: true};
+    term.requiredCount = COUNT_PLURAL;
+  }
+  else if (contains(['all','many','other'], text)){
+    term.cat = {Determiner: true};
+    term.requiredCount = COUNT_PLURAL;
+  }
+  else if (text === 'just'){
+    term.cat = {Adjective: true};
+  }
+  else if (text === 'way'){
+    term.cat = {NormalNoun: true};
+    term.requiredCount = COUNT_SINGULAR;
+  }
+  // SPECIALS
+  // these have to undergo further type-specific classification
+  else if (term.pos.Copula){
+    classifyCopula(term);
+  }
+  else if (term.pos.Determiner){
+    classifyDeterminer(term);
+  }
+  else if (term.pos.Possessive){
+    classifyPossessive(term);
+  }
+  else if (term.pos.Pronoun && term.text.split(/\s+/).length === 1){
+    classifyPronoun(term);
+  }
+  // SPECIAL NOUNLIKES
+  // originally classified as nouns, but shouldn't be treated like "normal" nouns
+  else if (term.pos.Date){
+    term.cat = {Date: true};
+  }
+  else if (term.pos.Person && !term.pos.Pronoun){
+    term.cat = {Person: true};
+    term.requiredCount = term.pos.Plural ? COUNT_PLURAL : COUNT_SINGULAR;
+  }
+  else if (term.pos.Value){
+    term.cat = {Value: true};
+  }
+  else if (term.pos.Url){
+    term.cat = {Url: true};
+  }
+  // SPECIAL VERBLIKES
+  // originally classified as verbs, but shouldn't be treated like "normal" verbs
+  else if (term.pos.Modal){
+    term.cat = {ModalVerb: true};
+  }
+  else if (isGerund(term)){
+    term.cat = {Gerund: true};
+    if (normalize(term.text) === 'being'){
+      // special case: 'being' can be a gerund or a noun
+      term.cat.NormalNoun = true;
+      term.requiredCount = COUNT_SINGULAR;
+    }
+  }
+  // ADVERBS
+  // these are often originally classified as nouns for some reason
+  else if (isAdverb(term)){
+    term.cat = {Adverb: true};
+  }
+  // "NORMAL" PARTS OF SPEECH
+  else if (term.pos.Adjective){
+    term.cat = {Adjective: true};
+  }
+  else if (term.pos.Condition){
+    term.cat = {Condition: true};
+  }
+  else if (term.pos.Conjunction){
+    // TODO: most of these aren't useful, e.g. 'before'
+    term.cat = {Conjunction: true};
+  }
+  else if (term.pos.Expression){
+    // TODO: I have no idea what falls into this category besides 'please'
+    term.cat = {Expression: true};
+  }
+  else if (term.pos.Noun){
+    term.cat = {NormalNoun: true};
+    term.requiredCount = term.pos.Plural ? COUNT_PLURAL : COUNT_SINGULAR;
+    if (term.pos.Plural){
+      term.cat.PluralNoun = true;
+    }
+  }
+  else if (term.pos.Preposition){
+    term.cat = {Preposition: true};
+  }
+  else if (term.pos.Question){
+    term.cat = {Question: true};
+  }
+  else if (term.pos.Verb){
+    classifyVerb(term);
+  }
+  // FALLTHROUGH
+  else {
+    term.cat = {};
+    console.log('COULDN\'T CATEGORIZE TERM');
+    console.log(term);
+  }
+}
+
 function termify(text){
-  // first pass: process the text with nlp_compromise to establish best-guess POS tags
+  // process the text with nlp_compromise to establish best-guess POS tags
   var sentences = nlp.text(text).sentences;
   var terms = flatten1(sentences.map(s => s.terms));
 
-  // second pass: manually adjust POS tags for our purposes
-  for (var i = 0; i < terms.length; i++){
-    var term = terms[i];
-    text = normalize(term.text);
-    // GARBAGE
-    // we don't care about these
-    if (isEmptyOrWhitespace(term.text)){
-      term.cat = {Whitespace: true};
-    }
-    else if (contains(blacklist, text)){
-      term.cat = {Blacklisted: true};
-    }
-    // CONTRACTIONS
-    // handle these early so we don't misclassify them as something else by mistake
-    else if (term.text.indexOf("'") !== -1 || term.text.indexOf('’') !== -1){
-      term.cat = {Contraction: true};
-    }
-    // SPECIALS
-    // these always have to undergo further type-specific classification
-    else if (contains(['are'], text)){
-      term.cat = {Copula: true};
-      term.requiredCount = COUNT_PLURAL;
-    }
-    else if (contains(['all','many','other'], text)){
-      term.cat = {Determiner: true};
-      term.requiredCount = COUNT_PLURAL;
-    }
-    else if (contains(['way'], text)){
-      term.cat = {NormalNoun: true};
-      term.requiredCount = COUNT_SINGULAR;
-    }
-    else if (contains(['just'], text)){
-      term.cat = {Adjective: true};
-    }
-    else if (term.pos.Copula){
-      classifyCopula(term);
-    }
-    else if (term.pos.Determiner){
-      classifyDeterminer(term);
-    }
-    else if (term.pos.Possessive){
-      classifyPossessive(term);
-    }
-    else if (term.pos.Pronoun && term.text.split(/\s+/).length === 1){
-      classifyPronoun(term);
-    }
-    // SPECIAL NOUNLIKES
-    // originally classified as nouns, but shouldn't be treated like "normal" nouns
-    else if (term.pos.Date){
-      term.cat = {Date: true};
-    }
-    else if (term.pos.Person && !term.pos.Pronoun){
-      term.cat = {Person: true};
-      term.requiredCount = term.pos.Plural ? COUNT_PLURAL : COUNT_SINGULAR;
-    }
-    else if (term.pos.Value){
-      term.cat = {Value: true};
-    }
-    else if (term.pos.Url){
-      term.cat = {Url: true};
-    }
-    // SPECIAL VERBLIKES
-    // originally classified as verbs, but shouldn't be treated like "normal" verbs
-    else if (term.pos.Modal){
-      term.cat = {ModalVerb: true};
-    }
-    else if (isGerund(term)){
-      term.cat = {Gerund: true};
-      if (normalize(term.text) === 'being'){
-        // special case: 'being' can be a gerund or a noun
-        term.cat.NormalNoun = true;
-        term.requiredCount = COUNT_SINGULAR;
-      }
-    }
-    // ADVERBS
-    // these are often originally classified as nouns for some reason
-    else if (isAdverb(term)){
-      term.cat = {Adverb: true};
-    }
-    // "NORMAL" PARTS OF SPEECH
-    else if (term.pos.Adjective){
-      term.cat = {Adjective: true};
-    }
-    else if (term.pos.Condition){
-      term.cat = {Condition: true};
-    }
-    else if (term.pos.Conjunction){
-      // TODO: most of these aren't useful, e.g. 'before'
-      term.cat = {Conjunction: true};
-    }
-    else if (term.pos.Expression){
-      // TODO: I have no idea what falls into this category besides 'please'
-      term.cat = {Expression: true};
-    }
-    else if (term.pos.Noun){
-      term.cat = {NormalNoun: true};
-      term.requiredCount = term.pos.Plural ? COUNT_PLURAL : COUNT_SINGULAR;
-      if (term.pos.Plural){
-        term.cat.PluralNoun = true;
-      }
-    }
-    else if (term.pos.Preposition){
-      term.cat = {Preposition: true};
-    }
-    else if (term.pos.Question){
-      term.cat = {Question: true};
-    }
-    else if (term.pos.Verb){
-      classifyVerb(term);
-    }
-    // FALLTHROUGH
-    else {
-      term.cat = {};
-      console.log('COULDN\'T CATEGORIZE TERM');
-      console.log(term);
-    }
-  }
+  // split up dubious clusters into separate terms
+  terms = decluster(terms);
+
+  // manually classify each term for our purposes
+  terms.forEach(classify);
 
   return terms;
 }
