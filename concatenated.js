@@ -41,11 +41,15 @@ function normalize(str){
   return str.trim().toLowerCase().replace(/[^a-z0-9\s]/g, '');
 }
 
-// required count constants
+// constants
 
 var COUNT_ANY = 0;
 var COUNT_SINGULAR = 1;
 var COUNT_PLURAL = 2;
+
+var INITIAL_ANY = 0;
+var INITIAL_CONSONANT = 1;
+var INITIAL_VOWEL = 2;
 
 // patterns
 
@@ -121,6 +125,7 @@ function classifyDeterminer(term){
   else if (text === 'a' || text === 'an'){ // indefinite article
     term.cat.Article = true;
     term.requiredCount = COUNT_SINGULAR;
+    term.requiredInitial = (text === 'a') ? INITIAL_CONSONANT : INITIAL_VOWEL;
   }
   else if (text === 'this' || text === 'that'){ // singular demonstrative
     term.requiredCount = COUNT_SINGULAR;
@@ -417,6 +422,16 @@ function hasRequiredCount(term, requiredCount){
   }
 }
 
+function hasRequiredInitial(term, requiredInitial){
+  if (requiredInitial === INITIAL_ANY || !requiredInitial){
+    return true;
+  } else {
+    var initial = normalize(term.text).substring(0,1);
+    var actual = contains(['a','e','i','o','u'], initial) ? INITIAL_VOWEL : INITIAL_CONSONANT;
+    return requiredInitial === actual;
+  }
+}
+
 function logTerm(term){
   console.log(term.text + ' | ' +
               Object.keys(term.pos).join(',') + ' | ' +
@@ -424,8 +439,10 @@ function logTerm(term){
               term.requiredCount);
 }
 
-function shouldAccept(term, pos, count){
-  return term.cat[pos] && hasRequiredCount(term, count) /*&& Math.random() < 0.8*/;
+function shouldAccept(term, pos, count, initial){
+  return term.cat[pos] &&
+         hasRequiredCount(term, count) &&
+         hasRequiredInitial(term, initial) /*&& Math.random() < 0.8*/;
 }
 
 function matchTermSequence(terms, pattern){
@@ -434,17 +451,23 @@ function matchTermSequence(terms, pattern){
   var currTerm;
   var patternIdx;
   var requiredCount = COUNT_ANY;
+  var requiredInitial = INITIAL_ANY;
 
   // subject
   patternIdx = 0;
   while (patternIdx < pattern.subject.length){
     currTerm = terms[currTermIdx];
     if (!currTerm) return null; // no more terms to try!
-    if (shouldAccept(currTerm, pattern.subject[patternIdx], requiredCount)){
+    if (shouldAccept(currTerm, pattern.subject[patternIdx], requiredCount, requiredInitial)){
       currTerm.marked = true;
       patternIdx += 1;
       if (currTerm.requiredCount){
         requiredCount = currTerm.requiredCount;
+      }
+      if (currTerm.requiredInitial){
+        requiredInitial = currTerm.requiredInitial;
+      } else {
+        requiredInitial = INITIAL_ANY;
       }
     }
     currTermIdx += 1;
@@ -471,11 +494,16 @@ function matchTermSequence(terms, pattern){
   while (patternIdx < pattern.object.length){
     currTerm = terms[currTermIdx];
     if (!currTerm) return null; // no more terms to try!
-    if (shouldAccept(currTerm, pattern.object[patternIdx], requiredCount)){
+    if (shouldAccept(currTerm, pattern.object[patternIdx], requiredCount, requiredInitial)){
       currTerm.marked = true;
       patternIdx += 1;
       if (currTerm.requiredCount){
         requiredCount = currTerm.requiredCount;
+      }
+      if (currTerm.requiredInitial){
+        requiredInitial = currTerm.requiredInitial;
+      } else {
+        requiredInitial = INITIAL_ANY;
       }
     }
     currTermIdx += 1;
