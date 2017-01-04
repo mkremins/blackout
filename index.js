@@ -302,12 +302,19 @@ var blacklist = [
   'which'
 ];
 
+var determiners = [
+  'a', 'an', 'the', 'this', 'that', 'these', 'those',
+  'another', 'each', 'every', 'all', 'some'
+];
+
 function decluster(terms){
   var newTerms = [];
+  var split;
   for (var i = 0; i < terms.length; i++){
     var term = terms[i];
+    // if it's a pronoun, it might have some extra junk attached to the front
     if (term.pos.Pronoun){
-      var split = term.text.split(/\s/);
+      split = term.text.split(/\s/);
       if (split.length > 1){
         for (var j = 0; j < split.length - 1; j++){
           // TODO these are basically ignored, even though they might be useful
@@ -316,9 +323,20 @@ function decluster(terms){
         }
         // assume the last part of the split is always the actual pronoun
         newTerms.push({text: split[split.length - 1], pos: {Pronoun: true}});
+      } else {
+        newTerms.push(term);
       }
     }
-    // TODO deal with nouns that have a determiner attached to the front
+    // if it's a noun, it might have a determiner attached to the front
+    else if (term.pos.Noun){
+      split = term.text.split(/\s/);
+      if (split.length > 1 && contains(determiners, normalize(split[0]))){
+        newTerms.push({text: split[0], pos: {Determiner: true}});
+        newTerms.push({text: term.text.substring(split[0].length + 1), pos: term.pos});
+      } else {
+        newTerms.push(term);
+      }
+    }
     else {
       newTerms.push(term);
     }
