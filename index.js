@@ -523,14 +523,16 @@ function matchTermSequence(terms, pattern){
   }
 
   // verb
-  if (pattern.verb[0] === 'ModalVerb'){
+  var isModal = pattern.verb[0] === 'ModalVerb';
+  if (isModal){
     requiredCount = COUNT_PLURAL;
   }
   patternIdx = 0;
   while (patternIdx < pattern.verb.length){
     currTerm = terms[currTermIdx];
     if (!currTerm) return null; // no more terms to try!
-    if (shouldAccept(currTerm, pattern.verb[patternIdx], requiredCount)){
+    if (shouldAccept(currTerm, pattern.verb[patternIdx], requiredCount) &&
+        !(isModal && (currTerm.pos.PastTense || currTerm.pos.PluperfectTense))){
       currTerm.marked = true;
       patternIdx += 1;
     }
