@@ -509,7 +509,8 @@ function logTerm(term){
 function shouldAccept(term, pos, count, initial){
   return term.cat[pos] &&
          hasRequiredCount(term, count) &&
-         hasRequiredInitial(term, initial) /*&& Math.random() < 0.8*/;
+         hasRequiredInitial(term, initial) &&
+         Math.random() < 0.9;
 }
 
 function matchTermSequence(terms, pattern){
