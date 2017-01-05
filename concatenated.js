@@ -96,6 +96,8 @@ var verbObjectPatterns = [
   //{verb: ['NormalVerb', 'Adverb'], object: []},
   // ...verbs the object
   {verb: ['NormalVerb'], object: ['Article', 'NormalNoun']},
+  // ...verbs to the object
+  //{verb: ['NormalVerb'], object: ['Preposition', 'Article', 'NormalNoun']},
   // ...verbs the adjective object
   {verb: ['NormalVerb'], object: ['Article', 'Adjective', 'NormalNoun']},
   // ...verbs objects
@@ -106,10 +108,14 @@ var verbObjectPatterns = [
   {verb: ['NormalVerb'], object: ['PluralNoun', 'And', 'PluralNoun']},
   // ...verbs the objects and objects
   {verb: ['NormalVerb'], object: ['Determiner', 'PluralNoun', 'And', 'PluralNoun']},
+  // ...verbs to objects and objects
+  //{verb: ['NormalVerb'], object: ['Preposition', 'PluralNoun', 'And', 'PluralNoun']},
   // ...verbs Max
   {verb: ['NormalVerb'], object: ['Person']},
   // ...verbs me
   {verb: ['NormalVerb'], object: ['ObjectPronoun']}
+  // ...verbs to me
+  //{verb: ['NormalVerb'], object: ['Preposition', 'ObjectPronoun']}
 ];
 
 var patterns = [];
