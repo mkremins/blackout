@@ -159,7 +159,7 @@ function classifyDeterminer(term){
   else if (contains(['another','each','every'], text)){ // singular quantifier
     term.requiredCount = COUNT_SINGULAR;
   }
-  else if (text === 'all' || text === 'some'){ // plural quantifier
+  else if (contains(['all','some','many','other'], text)){ // plural quantifier
     term.requiredCount = COUNT_PLURAL;
   }
   else if (text === 'own'){ // reclassify as verb
@@ -260,6 +260,7 @@ function classifyVerb(term){
     else if (hasSuffix(text, 'ed')) {
       // it's probably past tense - don't set a required count
       term.cat.DUBIOUS_VERB = true;
+      term.pos.PastTense = true; // need this to avoid using it with modals
     }
     // TODO do we care about past tense with '-d', e.g. 'trod'/'slid'?
     // (or exceptions e.g. 'nod'?)
@@ -317,38 +318,67 @@ var blacklist = [
 
 var determiners = [
   'a', 'an', 'the', 'this', 'that', 'these', 'those',
-  'another', 'each', 'every', 'all', 'some'
+  'other', 'another', 'each', 'every', 'all', 'some', 'many'
+];
+
+var pronouns = [
+  'i', 'you', 'he', 'she', 'we', 'they',
+  'me', 'him', 'her', 'us', 'them', 'it'
+];
+
+var copulas = [
+  'is', 'are', 'am', 'was', 'were'
 ];
 
 function decluster(terms){
   var newTerms = [];
-  var split;
   for (var i = 0; i < terms.length; i++){
     var term = terms[i];
-    // if it's a pronoun, it might have some extra junk attached to the front
-    if (term.pos.Pronoun){
-      split = term.text.split(/\s/);
-      if (split.length > 1){
-        for (var j = 0; j < split.length - 1; j++){
-          // TODO these are basically ignored, even though they might be useful
-          // (seems like they're usually nouns, occasionally verbs)
-          newTerms.push({text: split[j], pos: {}});
-        }
-        // assume the last part of the split is always the actual pronoun
-        newTerms.push({text: split[split.length - 1], pos: {Pronoun: true}});
-      } else {
-        newTerms.push(term);
+    var split = term.text.split(/\s/);
+    if (split.length > 1){
+      var first = split[0];
+      var last  = split[split.length - 1];
+      var firstTerm = null;
+      var lastTerm  = null;
+
+      // split off first term if necessary
+      var firstNorm = normalize(first);
+      if (contains(determiners, firstNorm)){
+        firstTerm = {text: first, pos: {Determiner: true}};
+      } else if (contains(pronouns, firstNorm)){
+        firstTerm = {text: first, pos: {Pronoun: true}};
+      } else if (contains(copulas, firstNorm) && normalize(split[1]) !== 'not'){
+        firstTerm = {text: first, pos: {Copula: true}};
       }
-    }
-    // if it's a noun, it might have a determiner attached to the front
-    else if (term.pos.Noun){
-      split = term.text.split(/\s/);
-      if (split.length > 1 && contains(determiners, normalize(split[0]))){
-        newTerms.push({text: split[0], pos: {Determiner: true}});
-        newTerms.push({text: term.text.substring(split[0].length + 1), pos: term.pos});
-      } else {
-        newTerms.push(term);
+
+      // split off second term if necessary
+      var lastNorm = normalize(last);
+      if (contains(determiners, lastNorm)){
+        lastTerm = {text: last, pos: {Determiner: true}};
+      } else if (contains(pronouns, lastNorm)){
+        lastTerm = {text: last, pos: {Pronoun: true}};
+      } else if (contains(copulas, lastNorm)){
+        lastTerm = {text: last, pos: {Copula: true}};
       }
+
+      // figure out what text still belongs in the middle term
+      var firstIdx = firstTerm ? first.length + 1 : 0;
+      var lastIdx  = lastTerm  ? term.text.length - (last.length + 1) : undefined;
+      var midText  = term.text.substring(firstIdx, lastIdx);
+
+      // reconstruct the middle term based on whether or not we split off other terms
+      var midTerm = {text: midText, pos: term.pos};
+      if ((firstTerm && firstTerm.pos.Pronoun) || (lastTerm && lastTerm.pos.Pronoun)) {
+        delete midTerm.pos.Pronoun;
+      }
+      if ((firstTerm && firstTerm.pos.Copula) || (lastTerm && lastTerm.pos.Copula)) {
+        delete midTerm.pos.Copula;
+      }
+
+      // push all the new terms onto the list
+      if (firstTerm) newTerms.push(firstTerm);
+      newTerms.push(midTerm);
+      if (lastTerm) newTerms.push(lastTerm);
     }
     else {
       newTerms.push(term);
@@ -374,16 +404,8 @@ function classify(term){
   }
   // SPECIFIC WORDS
   // these are exceptions to the normal rules, and have to be handled manually
-  else if (text === 'are'){
-    term.cat = {Copula: true};
-    term.requiredCount = COUNT_PLURAL;
-  }
   else if (text === 'and'){
     term.cat = {And: true};
-  }
-  else if (contains(['all','many','other'], text)){
-    term.cat = {Determiner: true};
-    term.requiredCount = COUNT_PLURAL;
   }
   else if (text === 'just'){
     term.cat = {Adjective: true};
@@ -394,16 +416,16 @@ function classify(term){
   }
   // SPECIALS
   // these have to undergo further type-specific classification
-  else if (term.pos.Copula){
+  else if (term.pos.Copula || contains(copulas, text)){
     classifyCopula(term);
   }
-  else if (term.pos.Determiner){
+  else if (term.pos.Determiner || contains(determiners, text)){
     classifyDeterminer(term);
   }
   else if (term.pos.Possessive){
     classifyPossessive(term);
   }
-  else if (term.pos.Pronoun && term.text.split(/\s+/).length === 1){
+  else if (term.pos.Pronoun || contains(pronouns, text)){
     classifyPronoun(term);
   }
   // SPECIAL NOUNLIKES
