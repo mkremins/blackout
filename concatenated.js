@@ -159,7 +159,7 @@ function classifyDeterminer(term){
   else if (contains(['another','each','every'], text)){ // singular quantifier
     term.requiredCount = COUNT_SINGULAR;
   }
-  else if (contains(['all','some','many','other'], text)){ // plural quantifier
+  else if (contains(['all','both','some','many','other'], text)){ // plural quantifier
     term.requiredCount = COUNT_PLURAL;
   }
   else if (text === 'own'){ // reclassify as verb
@@ -307,6 +307,7 @@ var blacklist = [
   'been', // ditto
   'else',
   'here',
+  'maybe',
   'over',
   'really',
   'same',
@@ -317,12 +318,14 @@ var blacklist = [
 ];
 
 var determiners = [
-  'a', 'an', 'the', 'this', 'that', 'these', 'those',
-  'other', 'another', 'each', 'every', 'all', 'some', 'many'
+  'a', 'an', 'the',
+  'this', 'that', 'these', 'those',
+  'another', 'each', 'every',
+  'all', 'both', 'many', 'other', 'some'
 ];
 
 var pronouns = [
-  'i', 'you', 'he', 'she', 'we', 'they',
+  'i', 'he', 'she', 'we', 'they', 'you',
   'me', 'him', 'her', 'us', 'them', 'it'
 ];
 
@@ -335,7 +338,11 @@ function decluster(terms){
   for (var i = 0; i < terms.length; i++){
     var term = terms[i];
     var split = term.text.split(/\s/);
-    if (split.length > 1){
+    if (split.length >= 4){ // any cluster this large is almost certainly tagged incorrectly
+      term.shouldBeDiscarded = true;
+      newTerms.push(term);
+    }
+    else if (split.length > 1){
       var first = split[0];
       var last  = split[split.length - 1];
       var firstTerm = null;
@@ -377,7 +384,7 @@ function decluster(terms){
 
       // push all the new terms onto the list
       if (firstTerm) newTerms.push(firstTerm);
-      newTerms.push(midTerm);
+      if (!isEmptyOrWhitespace(midText)) newTerms.push(midTerm);
       if (lastTerm) newTerms.push(lastTerm);
     }
     else {
@@ -387,15 +394,19 @@ function decluster(terms){
   return newTerms;
 }
 
+function shouldDiscard(term, text){
+  return term.shouldBeDiscarded ||
+         isEmptyOrWhitespace(text) ||
+         contains(blacklist, text) ||
+         term.text.indexOf('—') !== -1;
+}
+
 function classify(term){
   var text = normalize(term.text);
   // GARBAGE
   // we don't care about these
-  if (isEmptyOrWhitespace(text)){
-    term.cat = {Whitespace: true};
-  }
-  else if (contains(blacklist, text)){
-    term.cat = {Blacklisted: true};
+  if (shouldDiscard(term, text)){
+    term.cat = {Discarded: true};
   }
   // CONTRACTIONS
   // handle these early so we don't misclassify them as something else by mistake
