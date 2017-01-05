@@ -58,6 +58,10 @@ var subjectPatterns = [
   ['PluralNoun'],
   // adjective subjects...
   ['Adjective', 'PluralNoun'],
+  // subjects and subjects...
+  ['PluralNoun', 'And', 'PluralNoun'],
+  // the subjects and subjects...
+  ['Determiner', 'PluralNoun', 'And', 'PluralNoun'],
   // Max...
   ['Person'],
   // I...
@@ -93,6 +97,10 @@ var verbObjectPatterns = [
   {verb: ['NormalVerb'], object: ['PluralNoun']},
   // ...verbs adjective objects
   {verb: ['NormalVerb'], object: ['Adjective', 'PluralNoun']},
+  // ...verbs objects and objects
+  {verb: ['NormalVerb'], object: ['PluralNoun', 'And', 'PluralNoun']},
+  // ...verbs the objects and objects
+  {verb: ['NormalVerb'], object: ['Determiner', 'PluralNoun', 'And', 'PluralNoun']},
   // ...verbs Max
   {verb: ['NormalVerb'], object: ['Person']},
   // ...verbs me
@@ -364,6 +372,9 @@ function classify(term){
   else if (text === 'are'){
     term.cat = {Copula: true};
     term.requiredCount = COUNT_PLURAL;
+  }
+  else if (text === 'and'){
+    term.cat = {And: true};
   }
   else if (contains(['all','many','other'], text)){
     term.cat = {Determiner: true};
