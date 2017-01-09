@@ -162,7 +162,7 @@ function classifyDeterminer(term){
   else if (text === 'these' || text === 'those'){ // plural demonstrative
     term.requiredCount = COUNT_PLURAL;
   }
-  else if (contains(['another','each','every'], text)){ // singular quantifier
+  else if (contains(['another','each','every','no'], text)){ // singular quantifier
     term.requiredCount = COUNT_SINGULAR;
   }
   else if (contains(['all','both','some','many','other'], text)){ // plural quantifier
@@ -326,7 +326,7 @@ var blacklist = [
 var determiners = [
   'a', 'an', 'the',
   'this', 'that', 'these', 'those',
-  'another', 'each', 'every',
+  'another', 'each', 'every', 'no',
   'all', 'both', 'many', 'other', 'some'
 ];
 
