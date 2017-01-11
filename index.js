@@ -1,5 +1,5 @@
 (function(){
-var nlp = window.nlp_compromise;
+var nlp = require('nlp_compromise');
 
 // helper functions
 

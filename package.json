@@ -1,0 +1,10 @@
+{
+  "name": "blackout",
+  "version": "0.1.0",
+  "description": "Turn arbitrary web pages into procedurally generated blackout poetry.",
+  "main": "index.js",
+  "author": "Max Kreminski",
+  "dependencies": {
+    "nlp_compromise": "^6.5.3"
+  }
+}
