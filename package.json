@@ -5,6 +5,6 @@
   "main": "index.js",
   "author": "Max Kreminski",
   "dependencies": {
-    "nlp_compromise": "^6.5.3"
+    "pos": "^0.4.2"
   }
 }
