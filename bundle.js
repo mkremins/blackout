@@ -218,10 +218,6 @@ var genericTagMappings = {
   VBZ: {tag: {Verb: true}, count: COUNT_SINGULAR}
 };
 
-['SYM',',','.',':','$','#','"','(',')'].forEach(function(initTag){
-  genericTagMappings[initTag] = {isPunctuation: true};
-});
-
 function classify(word){
   word.tag = {};
   if (shouldIgnore(word)){
