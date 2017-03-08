@@ -1,2 +1,2 @@
 #!/bin/sh
-browserify index.js -o bundle.js
+browserify index.js -o docs/bundle.js

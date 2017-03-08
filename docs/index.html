@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>blackout poetry generator</title>
+  <style>
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: sans-serif;
+    font-size: 18px;
+  }
+  main {
+    margin: 1em;
+    margin-bottom: 2em;
+    max-width: 90%;
+    width: 640px;
+  }
+  .bookmarklet {
+    background: #eee;
+    border: 2px dotted #aaa;
+    border-radius: 4px;
+    color: black;
+    padding: 4px;
+    text-decoration: none;
+  }
+  a {
+    color: rgb(50,150,255);
+  }
+  img {
+    border: 1px solid #ccc;
+    display: block;
+    margin-bottom: 1.5em;
+    max-width: 90%;
+  }
+  li {
+    margin-bottom: 0.5em;
+  }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>blackout poetry generator</h1>
+    <p>Turns any web page into a work of procedurally generated blackout poetry!</p>
+    <p>To use it, just drag the <a class="bookmarklet" href="javascript:(function(){var s=document.createElement('script');s.setAttribute('src','https://mkremins.github.io/blackout/bundle.js?'+Math.floor((new Date()).getTime()/3600000));document.body.appendChild(s);}())">blackout poetry generator</a> bookmarklet to your browser’s bookmarks bar, then hit the button.</p>
+    <h2>examples</h2>
+    <div>
+      <a href="https://en.wikipedia.org/wiki/Poetry#Elegy"><img src="examples/elegy.png" alt=""></a>
+      <img src="examples/cancer.png" alt="">
+      <a href="http://opentranscripts.org/transcript/semantic-space-literal-robots"><img src="examples/mission.png" alt=""></a>
+    </div>
+    <h2>q&a</h2>
+    <h3>why make this?</h3>
+    <p>A lot of procedural content generation techniques involve taking a small “seed” (e.g. a grammar) and expanding it outwards. Lately, though, I’ve become more interested in <em>subtractive procedural generation</em>: procgen techniques that begin with a large block of “material” and create new stuff by procedurally carving most of the material away. Blackout poetry, as an inherently subtractive medium, seemed like a natural subject for my first experiment in this direction.</p>
+    <h3>what inspired this?</h3>
+    <p>I was mostly inspired by <a href="https://github.com/NaNoGenMo/2016/issues/119">The Days Left Forebodings and Water</a>, a 2016 <a href="https://nanogenmo.github.io/">NaNoGenMo</a> entry by <a href="https://lizadaly.com/">Liza Daly</a> that makes use of very similar techniques to generate blackout poetry given a source text.</p>
+    <h3>how does it work?</h3>
+    <p>First, the script locates every paragraph of text (HTML <code>&lt;p&gt;</code> tag) on the current page. Then, for each paragraph, it performs the following steps:</p>
+    <ol>
+      <li>Split the text up into a series of words.</li>
+      <li>Use <a href="https://github.com/dariusk/pos-js">pos-js</a> to annotate each word with the part of speech (noun, verb, etc) it represents.</li>
+      <li>Adjust the part-of-speech annotations, and add on some other annotations, based on a set of additional hand-written rules.</li>
+      <li>Run a number of <em>matchers</em>, each one looking for a series of words that fits a certain valid English sentence structure, over the annotated text.</li>
+      <li>Discard all the matchers that didn’t find a matching sequence of words, and randomly select one of the remaining matchers (the ones that did).</li>
+      <li>Rewrite the paragraph, blacking out all the words except those that were matched by the chosen matcher.</li>
+    </ol>
+    <p>In a certain sense, then, you can think of this process as turning each individual paragraph on the page into its own tiny poem.</p>
+    <h3>why a bookmarklet?</h3>
+    <p>I wanted to make the poetry generator available in as many different browsers as possible, and a bookmarklet seemed like the simplest way to do that. In the future I might try porting it to a browser extension or something else that’s more robust.</p>
+    <h3>where’s the source?</h3>
+    <p>It’s on GitHub! You can check it out <a href="https://github.com/mkremins/blackout">here</a>.</p>
+    <h3>who are you?</h3>
+    <p>I’m <a href="https://mkremins.github.io">Max Kreminski</a>. I’m into game design, procgen, and computational creativity, and I make a lot of weird generative art things like this one. If you want to keep up with what I’m working on, you should <a href="https://twitter.com/maxkreminski">follow me on Twitter</a>!</p>
+  </main>
+</body>
+</html>
