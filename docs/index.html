@@ -26,6 +26,12 @@
     padding: 4px;
     text-decoration: none;
   }
+  pre {
+    background: #eee;
+    font-size: 16px;
+    overflow: scroll;
+    padding: 0.5em;
+  }
   a {
     color: rgb(50,150,255);
   }
@@ -45,6 +51,8 @@
     <h1>blackout poetry generator</h1>
     <p>Turns any web page into a work of procedurally generated blackout poetry!</p>
     <p>To use it, just drag the <a class="bookmarklet" href="javascript:(function(){var s=document.createElement('script');s.setAttribute('src','https://mkremins.github.io/blackout/bundle.js?'+Math.floor((new Date()).getTime()/3600000));document.body.appendChild(s);}())">blackout poetry generator</a> bookmarklet to your browser’s bookmarks bar, then hit the button.</p>
+    <p>Or, if you’re on a mobile browser, create a new bookmark, then edit it and replace its address with the (copyable) code below:</p>
+    <pre>javascript:(function(){var s=document.createElement('script');s.setAttribute('src','https://mkremins.github.io/blackout/bundle.js?'+Math.floor((new Date()).getTime()/3600000));document.body.appendChild(s);}())</pre>
     <h2>examples</h2>
     <div>
       <a href="https://en.wikipedia.org/wiki/Poetry#Elegy"><img src="examples/elegy.png" alt=""></a>
