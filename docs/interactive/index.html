@@ -1,0 +1,67 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>blackout poetry maker</title>
+  <style>
+  body {
+  	font-family: Georgia, serif;
+  	font-size: 21px;
+  	line-height: 1.5;
+  	margin: 0 auto;
+  }
+  a:hover{
+  	background: black;
+  	color: white;
+  	text-decoration: none;
+  }
+  #instructions {
+  	background: #eee;
+  	font-family: sans-serif;
+  	font-size: 18px;
+  	margin-bottom: 2rem;
+  	padding: 2rem 5%;
+  }
+  .instructions-content {
+  	margin: 0 auto;
+  	max-width: 700px;
+  }
+  .instructions-content p:first-of-type {
+  	margin-top: 0;
+  }
+  .instructions-content p:last-of-type {
+  	margin-bottom: 2rem;
+  }
+  #poemify-button {
+  	background: black;
+  	border-radius: 0.5rem;
+  	color: white;
+  	cursor: pointer;
+  	margin: 0 auto;
+  	padding: 0.5rem;
+  	text-align: center;
+  	width: 60%;
+  }
+  #poemify-button:hover {
+  	background: rgb(208,146,250);
+  }
+  #source-text {
+  	margin: 0 auto;
+  	max-width: 800px;
+  	padding: 0 5%;
+  }
+  </style>
+</head>
+<body>
+	<div id="instructions">
+		<div class="instructions-content">
+			<p><strong>About.</strong> This is a procedural poetry experiment by <a href="https://mkremins.github.io">Max Kreminski</a>, and the successor to an earlier <a href="https://mkremins.github.io/blackout">blackout poetry generator</a>. The example source text below is an excerpt from Allison Parrish’s talk, <a href="http://opentranscripts.org/transcript/semantic-space-literal-robots/">“Exploring (Semantic) Space With (Literal) Robots”</a>.</p>
+			<p><strong>Instructions.</strong> The text below is editable. Paste in some source text you'd like to turn into blackout poetry, or write your own. Then press the POEMIFY button to begin exploring poemspace.</p>
+			<div id="poemify-button">POEMIFY</div>
+		</div>
+	</div>
+	<div id="source-text" contenteditable>
+		<p>When I say that I’m an experimental computer poet, what I mean is that I write computer programs that write poems. Part of what I want to do in this talk is offer a new framework for thinking about what it means to write computer programs that write poems. Because usually when we think about computer generated poetry, we think of articles like this where any instance of some human task being automated is met by some story that’s like, “I welcome our robotic X overlords” where I replace X with whatever task is being automated by a computer. Most people when they think of computer poetry think that the task of the computer poet is to recreate with as much fidelity as possible poetry that is written by humans. I have no interest in making poetry that looks like it was written by humans. I think that that’s a plainly boring task that nobody should try to attempt.</p>
+	</div>
+  <script src="./bundle.js"></script>
+</body>
+</html>
