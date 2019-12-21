@@ -414,24 +414,17 @@ function logWords(words){
 
 // rendering the live poem editors
 
-function pushIfNotPresent(list, item){
-  var list = list || [];
-  if (!contains(list,item)) list.push(item);
-  return list;
-}
-
-function prefixify(indexSeqs){
-  var choicesByPrefix = {};
-  for (var i = 0; i < indexSeqs.length; i++){
-    var indexSeq = indexSeqs[i];
-    for (var j = 0; j <= indexSeq.length; j++){
-      var prefix = indexSeq.slice(0,j);
-      var last = indexSeq[j];
-      if (last === undefined) last = 'end';
-      choicesByPrefix[prefix] = pushIfNotPresent(choicesByPrefix[prefix], last);
+function choicesBySelection(selection, allMatches) {
+  const validMatches = allMatches.filter(match => selection.every(index => match.includes(index)));
+  const allValidChoiceIndexes = [];
+  for (let match of validMatches) {
+    for (let choiceIndex of match) {
+      if (allValidChoiceIndexes.includes(choiceIndex)) continue;
+      if (selection.includes(choiceIndex)) continue;
+      allValidChoiceIndexes.push(choiceIndex);
     }
   }
-  return choicesByPrefix;
+  return allValidChoiceIndexes;
 }
 
 function paintWordSpan(wordSpan, color) {
@@ -445,7 +438,7 @@ function paintWordSpan(wordSpan, color) {
 
 var MAGIC_COLOR = 'rgb(208,146,250)';
 
-function rerenderForPrefix(poemNode, prefix, choicesByPrefix){
+function rerenderForSelection(poemNode, selection, allMatches){
   // reset all spans
   var spans = poemNode.childNodes;
   for (var i = 0; i < spans.length; i++){
@@ -459,31 +452,32 @@ function rerenderForPrefix(poemNode, prefix, choicesByPrefix){
   }
 
   // make text visible for locked-in words
-  for (var i = 0; i < prefix.length; i++){
-    var wordSpan = spans[prefix[i] * 2];
+  for (var i = 0; i < selection.length; i++){
+    var wordSpan = spans[selection[i] * 2];
     paintWordSpan(wordSpan, 'inherit');
     wordSpan.style.cursor = 'pointer';
-    // clicking a locked-in word will unlock it and all its followers
-    wordSpan.newPrefix = prefix.slice(0,i);
+    // clicking a selected word will remove it from the selection
+    wordSpan.index = selection[i];
     wordSpan.onclick = function() {
-      rerenderForPrefix(poemNode, this.newPrefix, choicesByPrefix);
+      const newSelection = selection.filter(index => index !== this.index);
+      rerenderForSelection(poemNode, newSelection, allMatches);
     };
   }
 
   // add choice buttons
-  var choices = choicesByPrefix[prefix];
+  var choices = choicesBySelection(selection, allMatches);
   if (!choices) return; // bail out early if no choices
   for (var i = 0; i < choices.length; i++) {
     var choice = choices[i];
-    if (typeof choice === 'string') continue;
     var choiceSpan = spans[choice * 2];
     paintWordSpan(choiceSpan, 'inherit');
     choiceSpan.style.color = MAGIC_COLOR;
     choiceSpan.style.cursor = 'pointer';
-    // clicking a choice span will lock in the word it represents
-    choiceSpan.newPrefix = prefix.concat([choice]);
+    // clicking a choice span will add the word it represents to the selection
+    choiceSpan.index = choice;
     choiceSpan.onclick = function() {
-      rerenderForPrefix(poemNode, this.newPrefix, choicesByPrefix);
+      const newSelection = selection.concat([this.index]);
+      rerenderForSelection(poemNode, newSelection, allMatches);
     };
 
     // hovering a choice span will reveal its text
@@ -508,7 +502,7 @@ function initPoemEditor(poemNode, words, allMatches) {
     spaceSpan.innerText = ' ';
     poemNode.appendChild(spaceSpan);
   }
-  rerenderForPrefix(poemNode, [], prefixify(allMatches));
+  rerenderForSelection(poemNode, [], allMatches);
 }
 
 function poemify(node){
