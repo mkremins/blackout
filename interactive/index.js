@@ -433,13 +433,13 @@ function prefixify(indexSeqs){
   return choicesByPrefix;
 }
 
-function deblackout(wordSpan){
-  wordSpan.style.background = 'inherit';
-  // also deblackout the surrounding spaces, if any
+function paintWordSpan(wordSpan, color) {
+  wordSpan.style.background = color;
+  // also paint the surrounding spaces, if any
   var prevSpaceSpan = wordSpan.previousSibling;
-  if (prevSpaceSpan) prevSpaceSpan.style.background = 'inherit';
+  if (prevSpaceSpan) prevSpaceSpan.style.background = color;
   var nextSpaceSpan = wordSpan.nextSibling;
-  if (nextSpaceSpan) nextSpaceSpan.style.background = 'inherit';
+  if (nextSpaceSpan) nextSpaceSpan.style.background = color;
 }
 
 var MAGIC_COLOR = 'rgb(208,146,250)';
@@ -460,7 +460,7 @@ function rerenderForPrefix(poemNode, prefix, choicesByPrefix){
   // make text visible for locked-in words
   for (var i = 0; i < prefix.length; i++){
     var wordSpan = spans[prefix[i] * 2];
-    deblackout(wordSpan);
+    paintWordSpan(wordSpan, 'inherit');
     wordSpan.style.cursor = 'pointer';
     // clicking a locked-in word will unlock it and all its followers
     wordSpan.newPrefix = prefix.slice(0,i);
@@ -476,7 +476,7 @@ function rerenderForPrefix(poemNode, prefix, choicesByPrefix){
     var choice = choices[i];
     if (typeof choice === 'string') continue;
     var choiceSpan = spans[choice * 2];
-    deblackout(choiceSpan);
+    paintWordSpan(choiceSpan, 'inherit');
     choiceSpan.style.color = MAGIC_COLOR;
     choiceSpan.style.cursor = 'pointer';
     // clicking a choice span will lock in the word it represents
@@ -486,18 +486,12 @@ function rerenderForPrefix(poemNode, prefix, choicesByPrefix){
     };
 
     // hovering a choice span will reveal its text
-    choiceSpan.style.background = MAGIC_COLOR;
-    if (choiceSpan.previousSibling) choiceSpan.previousSibling.style.background = MAGIC_COLOR;
-    if (choiceSpan.nextSibling) choiceSpan.nextSibling.style.background = MAGIC_COLOR;
+    paintWordSpan(choiceSpan, MAGIC_COLOR);
     choiceSpan.onmouseenter = function() {
-      this.style.background = 'inherit';
-      if (this.previousSibling) this.previousSibling.style.background = 'inherit';
-      if (this.nextSibling) this.nextSibling.style.background = 'inherit';
+      paintWordSpan(this, 'inherit');
     }
     choiceSpan.onmouseleave = function () {
-      this.style.background = MAGIC_COLOR;
-      if (this.previousSibling) this.previousSibling.style.background = MAGIC_COLOR;
-      if (this.nextSibling) this.nextSibling.style.background = MAGIC_COLOR;
+      paintWordSpan(this, MAGIC_COLOR);
     }
   }
 }

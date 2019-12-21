@@ -1,2 +1,2 @@
 #!/bin/sh
-browserify index.js -o docs/interactive/bundle.js
+browserify interactive/index.js -o docs/interactive/bundle.js
