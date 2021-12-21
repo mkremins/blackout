@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 (function(){
 var pos = require('pos');
 var lexicon = require('pos/lexicon');
@@ -439,6 +439,9 @@ function paintWordSpan(wordSpan, color) {
 var MAGIC_COLOR = 'rgb(208,146,250)';
 
 function rerenderForSelection(poemNode, selection, allMatches){
+  // make selection available in console
+  window.currentPoem = selection;
+
   // reset all spans
   var spans = poemNode.childNodes;
   for (var i = 0; i < spans.length; i++){
@@ -510,10 +513,12 @@ function poemify(node){
   if (isEmptyOrWhitespace(node.innerText)) return; // bail out early if there isn't any text
   console.log('SOURCE TEXT: ' + node.innerText);
   var words = wordify(node.innerText);
+  console.log("words", words);
 
   // find all possible matches against the words
   var startTimestamp = Date.now();
   var allMatches = findAllMatches(words);
+  console.log("allMatches", allMatches);
   console.log('Found ' + allMatches.length + ' matches in ' + (Date.now() - startTimestamp) + 'ms');
 
   // initialize this node as a poem editor

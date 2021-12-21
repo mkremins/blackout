@@ -438,6 +438,9 @@ function paintWordSpan(wordSpan, color) {
 var MAGIC_COLOR = 'rgb(208,146,250)';
 
 function rerenderForSelection(poemNode, selection, allMatches){
+  // make selection available in console
+  window.currentPoem = selection;
+
   // reset all spans
   var spans = poemNode.childNodes;
   for (var i = 0; i < spans.length; i++){
@@ -509,10 +512,12 @@ function poemify(node){
   if (isEmptyOrWhitespace(node.innerText)) return; // bail out early if there isn't any text
   console.log('SOURCE TEXT: ' + node.innerText);
   var words = wordify(node.innerText);
+  console.log("words", words);
 
   // find all possible matches against the words
   var startTimestamp = Date.now();
   var allMatches = findAllMatches(words);
+  console.log("allMatches", allMatches);
   console.log('Found ' + allMatches.length + ' matches in ' + (Date.now() - startTimestamp) + 'ms');
 
   // initialize this node as a poem editor
